@@ -63,7 +63,6 @@ const RecipeDetail = ({ meal, onBack }: RecipeDetailProps) => {
       animate={{ opacity: 1 }}
       className="max-w-5xl mx-auto px-4 py-8"
     >
-      {/* Back button + language */}
       <div className="flex items-center justify-between mb-8 flex-wrap gap-4">
         <button
           onClick={onBack}
