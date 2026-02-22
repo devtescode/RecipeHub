@@ -14,13 +14,12 @@ const Index = () => {
   const [latestMeals, setLatestMeals] = useState<Meal[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
 
-
-
+  // Fetch latest recipes on page load
   useEffect(() => {
     const fetchLatestMeals = async () => {
       try {
-        const results = await searchMeals("a"); // or a default query to get multiple recipes
-        setLatestMeals(results.slice(0, 6)); // Take first 6 meals
+        const results = await searchMeals("a"); // default query to get multiple recipes
+        setLatestMeals(results.slice(0, 6)); // show first 6 recipes
       } catch {
         setLatestMeals([]);
       }
@@ -29,14 +28,21 @@ const Index = () => {
     fetchLatestMeals();
   }, []);
 
-
+  // Track search input and fetch search results
   const handleSearch = async (query: string) => {
+    setSearchQuery(query);
     setIsLoading(true);
     setSelectedMeal(null);
     setHasSearched(true);
     try {
-      const results = await searchMeals(query);
-      setMeals(results);
+      if (query.trim()) {
+        // If there's a search query, fetch those results
+        const results = await searchMeals(query);
+        setMeals(results);
+      } else {
+        // If query is empty, show latest 6 recipes
+        setMeals(latestMeals);
+      }
     } catch {
       setMeals([]);
     } finally {
@@ -82,16 +88,19 @@ const Index = () => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
             >
+              {/* Hero Search */}
               <HeroSearch onSearch={handleSearch} isLoading={isLoading} />
 
-              {/* Results */}
+              {/* Recipes Section */}
               <section className="max-w-7xl mx-auto px-4 py-12">
+                {/* Loading Spinner */}
                 {isLoading && (
                   <div className="flex justify-center py-20">
                     <div className="w-10 h-10 border-4 border-muted border-t-primary rounded-full animate-spin" />
                   </div>
                 )}
 
+                {/* Show latest recipes when input is empty */}
                 {!isLoading && !hasSearched && latestMeals.length > 0 && (
                   <div>
                     <h2 className="text-2xl font-display font-semibold text-foreground mb-6">
@@ -113,7 +122,30 @@ const Index = () => {
                   </div>
                 )}
 
-                {!isLoading && hasSearched && meals.length === 0 && (
+                {/* Show results when searched with empty query or search results */}
+                {!isLoading && hasSearched && searchQuery.trim() === "" && meals.length > 0 && (
+                  <div>
+                    <h2 className="text-2xl font-display font-semibold text-foreground mb-6">
+                      Latest Recipes
+                    </h2>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {meals.map((meal, i) => (
+                        <RecipeCard
+                          key={meal.idMeal}
+                          meal={meal}
+                          index={i}
+                          onClick={() => {
+                            setSelectedMeal(meal);
+                            window.scrollTo({ top: 0, behavior: "smooth" });
+                          }}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Show no results message */}
+                {!isLoading && hasSearched && searchQuery.trim() !== "" && meals.length === 0 && (
                   <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
@@ -125,7 +157,8 @@ const Index = () => {
                   </motion.div>
                 )}
 
-                {!isLoading && hasSearched && meals.length > 0 && (
+                {/* Show search results */}
+                {!isLoading && hasSearched && searchQuery.trim() !== "" && meals.length > 0 && (
                   <div>
                     <h2 className="text-2xl font-display font-semibold text-foreground mb-6">
                       Found {meals.length} recipe{meals.length > 1 ? "s" : ""}

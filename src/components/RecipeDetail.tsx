@@ -20,24 +20,31 @@ const RecipeDetail = ({ meal, onBack }: RecipeDetailProps) => {
   useEffect(() => {
     if (language === "en") {
       setTranslatedInstructions(meal.strInstructions);
+      setIsTranslating(false);
       return;
     }
 
     let cancelled = false;
     setIsTranslating(true);
 
-    // Translate in chunks for better results
+    // Translate in chunks for better results - in parallel for speed
     const chunks = meal.strInstructions.match(/[^.!?\n]+[.!?\n]+/g) || [meal.strInstructions];
     const translateAll = async () => {
-      const results: string[] = [];
-      for (const chunk of chunks) {
-        if (cancelled) return;
-        const translated = await translateText(chunk.trim(), language);
-        results.push(translated);
-      }
-      if (!cancelled) {
-        setTranslatedInstructions(results.join(" "));
-        setIsTranslating(false);
+      try {
+        // Translate all chunks in parallel for maximum speed
+        const results = await Promise.all(
+          chunks.map(chunk => translateText(chunk.trim(), language))
+        );
+        if (!cancelled) {
+          setTranslatedInstructions(results.join(" "));
+          setIsTranslating(false);
+        }
+      } catch (error) {
+        if (!cancelled) {
+          console.error("Translation error:", error);
+          setTranslatedInstructions(meal.strInstructions);
+          setIsTranslating(false);
+        }
       }
     };
 

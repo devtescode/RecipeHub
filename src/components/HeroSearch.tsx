@@ -13,7 +13,16 @@ const HeroSearch = ({ onSearch, isLoading }: HeroSearchProps) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (query.trim()) onSearch(query.trim());
+    onSearch(query.trim());
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setQuery(value);
+    // If input is cleared, show default 6 recipes
+    if (value.trim() === "" && query.trim() !== "") {
+      onSearch("");
+    }
   };
 
   return (
@@ -54,7 +63,7 @@ const HeroSearch = ({ onSearch, isLoading }: HeroSearchProps) => {
           <input
             type="text"
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            onChange={handleInputChange}
             placeholder="Search for a recipe... e.g. Chicken Curry"
             className="flex-1 px-6 py-4 md:py-5 bg-transparent text-foreground placeholder:text-muted-foreground font-body text-base md:text-lg outline-none"
           />
